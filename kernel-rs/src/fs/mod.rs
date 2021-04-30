@@ -13,6 +13,7 @@
 
 use core::{cmp, mem};
 
+use pin_project::pin_project;
 use spin::Once;
 
 use crate::{
@@ -42,10 +43,12 @@ const NDIRECT: usize = 12;
 const NINDIRECT: usize = BSIZE.wrapping_div(mem::size_of::<u32>());
 const MAXFILE: usize = NDIRECT.wrapping_add(NINDIRECT);
 
+#[pin_project]
 pub struct FileSystem {
     /// Initializing superblock should run only once because forkret() calls FileSystem::init().
     /// There should be one superblock per disk device, but we run with only one device.
     superblock: Once<Superblock>,
+    #[pin]
     pub log: Log,
 }
 

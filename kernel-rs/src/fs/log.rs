@@ -25,6 +25,7 @@ use core::ops::{Deref, DerefMut};
 
 use arrayvec::ArrayVec;
 use itertools::*;
+use pin_project::pin_project;
 use spin::Once;
 use static_assertions::const_assert;
 
@@ -36,9 +37,11 @@ use crate::{
     virtio::VirtioDisk,
 };
 
+#[pin_project]
 pub struct Log {
     /// Initializing inner should run only once because forkret() calls FileSystem::init().
     inner: Once<Sleepablelock<LogInner>>,
+    #[pin]
     pub disk: Sleepablelock<VirtioDisk>,
 }
 

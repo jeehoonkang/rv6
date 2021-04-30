@@ -101,6 +101,7 @@ pub struct KernelBuilder {
 
     // TODO(https://github.com/kaist-cp/rv6/issues/516)
     // Make this private and always use `KernelRef::fs` instead.
+    #[pin]
     pub file_system: FileSystem,
 }
 
@@ -242,7 +243,14 @@ impl KernelBuilder {
         this.bcache.get_pin_mut().init();
 
         // Emulated hard disk.
-        this.file_system.log.disk.get_mut().init();
+        this.file_system
+            .project()
+            .log
+            .project()
+            .disk
+            .get_pin_mut()
+            .as_ref()
+            .init();
 
         // First user process.
         procs.user_proc_init(this.kmem.as_ref().get_ref());

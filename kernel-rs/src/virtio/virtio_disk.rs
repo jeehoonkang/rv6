@@ -5,6 +5,7 @@
 /// qemu ... -drive file=fs.img,if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 use core::array::IntoIter;
 use core::mem;
+use core::pin::Pin;
 use core::ptr;
 use core::sync::atomic::{fence, Ordering};
 
@@ -184,7 +185,7 @@ impl Sleepablelock<VirtioDisk> {
 }
 
 impl VirtioDisk {
-    pub fn init(&self) {
+    pub fn init(self: Pin<&Self>) {
         let mut status: VirtIOStatus = VirtIOStatus::empty();
 
         // MMIO registers are located below KERNBASE, while kernel text and data
