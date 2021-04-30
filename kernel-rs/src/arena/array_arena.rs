@@ -63,7 +63,7 @@ impl<T: 'static + ArenaObject + Unpin, const CAPACITY: usize> Arena
                     // Note: Do not use `break` here.
                     // We must first search through all entries, and then alloc at empty
                     // only if the entry we're finding for doesn't exist.
-                } else if let Some(r) = entry.try_borrow() {
+                } else if let Some(r) = entry.as_ref().try_borrow() {
                     // The entry is not under finalization. Check its data.
                     if c(&r) {
                         return Some(Rc::new(arena, Handle(arena.0.brand(r))));
@@ -75,7 +75,7 @@ impl<T: 'static + ArenaObject + Unpin, const CAPACITY: usize> Arena
                 // SAFETY: `cell` is not referenced or borrowed. Also, it is already pinned.
                 let mut cell = unsafe { Pin::new_unchecked(&mut *cell_raw) };
                 n(cell.as_mut().get_pin_mut().unwrap().get_mut());
-                let handle = Handle(arena.0.brand(cell.borrow()));
+                let handle = Handle(arena.0.brand(cell.as_ref().borrow()));
                 Rc::new(arena, handle)
             })
         })
@@ -89,7 +89,7 @@ impl<T: 'static + ArenaObject + Unpin, const CAPACITY: usize> Arena
             for mut entry in IterPinMut::from(this.entries) {
                 if !entry.is_borrowed() {
                     *(entry.as_mut().get_pin_mut().unwrap().get_mut()) = f();
-                    let handle = Handle(arena.0.brand(entry.borrow()));
+                    let handle = Handle(arena.0.brand(entry.as_ref().borrow()));
                     return Some(Rc::new(arena, handle));
                 }
             }

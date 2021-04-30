@@ -95,36 +95,40 @@ impl<T> RcCell<T> {
     ///
     /// `RcCell` allows only up to `usize::MAX - 1` number of `Ref<T>` to coexist.
     /// Hence, this function will return `None` if the caller tries to borrow more than `usize::MAX - 1` times.
-    pub fn try_borrow(&self) -> Option<Ref<T>> {
+    pub fn try_borrow(self: Pin<&Self>) -> Option<Ref<T>> {
         let refcnt = self.refcnt.get();
         if refcnt == BORROWED_MUT - 1 || refcnt == BORROWED_MUT {
             None
         } else {
             self.refcnt.set(refcnt + 1);
-            Some(Ref { ptr: self })
+            Some(Ref {
+                ptr: self.get_ref(),
+            })
         }
     }
 
     /// Mutably borrows the `RcCell` if it is not borrowed.
     /// Otherwise, returns `None`.
-    pub fn try_borrow_mut(&self) -> Option<RefMut<T>> {
+    pub fn try_borrow_mut(self: Pin<&Self>) -> Option<RefMut<T>> {
         if self.is_borrowed() {
             None
         } else {
             self.refcnt.set(BORROWED_MUT);
-            Some(RefMut { ptr: self })
+            Some(RefMut {
+                ptr: self.get_ref(),
+            })
         }
     }
 
     /// Immutably borrows the `RcCell` if it is not mutably borrowed.
     /// Otherwise, panics.
-    pub fn borrow(&self) -> Ref<T> {
+    pub fn borrow(self: Pin<&Self>) -> Ref<T> {
         self.try_borrow().expect("already mutably borrowed")
     }
 
     /// Mutably borrows the `RcCell` if it is not borrowed.
     /// Otherwise, panics.
-    pub fn borrow_mut(&self) -> RefMut<T> {
+    pub fn borrow_mut(self: Pin<&Self>) -> RefMut<T> {
         self.try_borrow_mut().expect("already borrowed")
     }
 }

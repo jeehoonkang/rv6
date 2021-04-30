@@ -113,7 +113,7 @@ impl<T: 'static + ArenaObject + Unpin, const CAPACITY: usize> Arena
                 if !entry.data.is_borrowed() {
                     empty = Some(&entry.data as *const _ as *mut _);
                 }
-                if let Some(r) = entry.data.try_borrow() {
+                if let Some(r) = entry.as_ref().project_ref().data.try_borrow() {
                     if c(&r) {
                         return Some(Rc::new(arena, Handle(arena.0.brand(r))));
                     }
@@ -124,7 +124,7 @@ impl<T: 'static + ArenaObject + Unpin, const CAPACITY: usize> Arena
                 // SAFETY: `cell` is not referenced or borrowed. Also, it is already pinned.
                 let mut cell = unsafe { Pin::new_unchecked(&mut *cell_raw) };
                 n(cell.as_mut().get_pin_mut().unwrap().get_mut());
-                let handle = Handle(arena.0.brand(cell.borrow()));
+                let handle = Handle(arena.0.brand(cell.as_ref().borrow()));
                 Rc::new(arena, handle)
             })
         })
@@ -145,7 +145,7 @@ impl<T: 'static + ArenaObject + Unpin, const CAPACITY: usize> Arena
                         .get_pin_mut()
                         .unwrap()
                         .get_mut()) = f();
-                    let handle = Handle(arena.0.brand(entry.data.borrow()));
+                    let handle = Handle(arena.0.brand(entry.as_ref().project_ref().data.borrow()));
                     return Some(Rc::new(arena, handle));
                 }
             }
